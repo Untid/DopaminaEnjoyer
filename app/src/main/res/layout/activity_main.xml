@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Modo "dopamina" -->
+    <FrameLayout
+        android:id="@+id/dopamineLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/fondo_dopamina"
+        android:visibility="gone">
+
+        <!-- Contenedor de nivel y progreso -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvNivel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nivel 0"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="8dp" />
+
+            <ProgressBar
+                android:id="@+id/clickProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:progressDrawable="@drawable/custom_progress_bar"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvLevelUpMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#99000000"
+            android:padding="20dp"
+            android:textAlignment="center"
+            android:textColor="#FFD700"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/btnMenu"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="top|start"
+            android:layout_margin="16dp"
+            android:background="@drawable/icono_opciones"
+            android:contentDescription="Menú"
+            android:tint="#FFFFFF" />
+        <!-- android:src="@android:drawable/ic_menu_more" -->
+        <!-- Contenedor para efectos visuales -->
+        <FrameLayout
+            android:id="@+id/effectsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="80dp" />
+
+    </FrameLayout>
+
+    <!-- Menú de inicio -->
+    <LinearLayout
+        android:id="@+id/menuInicio"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/fondo_dopamina"
+        android:padding="32dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🧠 Dopamina Enjoyer"
+            android:textSize="28sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="48dp" />
+
+        <Button
+            android:id="@+id/btnEmpezar"
+            android:layout_width="220dp"
+            android:layout_height="60dp"
+            android:text="¡EMPEZAR!"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/btnZen"
+            android:layout_width="220dp"
+            android:layout_height="60dp"
+            android:text="Modo Zen"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+
+
+        <!-- ✅ NUEVO BOTÓN: Estadísticas -->
+        <Button
+            android:id="@+id/btnEstadisticas"
+            android:layout_width="220dp"
+            android:layout_height="60dp"
+            android:text="Estadísticas"
+            android:textSize="16sp"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/btnSalir"
+            android:layout_width="220dp"
+            android:layout_height="60dp"
+            android:text="Salir"
+            android:textSize="16sp" />
+    </LinearLayout>
+</FrameLayout>

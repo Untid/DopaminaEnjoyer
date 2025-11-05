@@ -1,0 +1,32 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/zenTouchArea"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/fondo_relax"
+    android:gravity="center">
+
+
+    <!-- Texto guía -->
+    <TextView
+        android:id="@+id/instructions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pulsa y mantén para comenzar"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="120dp"/>
+
+    <!-- Botón Volver -->
+    <Button
+        android:id="@+id/btnSalirZen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Volver"
+        android:layout_margin="24dp"
+        android:background="@drawable/rounded_button_background"
+        android:textColor="@android:color/white"
+        android:layout_gravity="top|end"/>
+
+
+</FrameLayout>
