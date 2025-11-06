@@ -28,5 +28,4 @@
         android:textColor="@android:color/white"
         android:layout_gravity="top|end"/>
 
-
 </FrameLayout>

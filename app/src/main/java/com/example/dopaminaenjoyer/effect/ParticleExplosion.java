@@ -12,6 +12,9 @@ import java.util.Random;
 
 public class ParticleExplosion {
 
+    private static float globalAlpha = 1f;
+    public static void setGlobalAlpha(float a) { globalAlpha = a; }
+
     private final FrameLayout container;
     private final Random random = new Random();
 

@@ -17,6 +17,10 @@ import androidx.annotation.Nullable;
 
 public class RippleEffect extends View {
 
+    private static float globalAlpha = 1f;
+    public static void setGlobalAlpha(float a) { globalAlpha = a; }
+
+
     private Paint paint;
     private float radius = 0f;
     private int color = Color.YELLOW;
@@ -63,13 +67,19 @@ public class RippleEffect extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        // Dibuja el anillo centrado en el centro del View
+
+        // Aplicar alpha global (modo minimalista)
+        int alpha = (int) (currentAlpha * globalAlpha);
+        alpha = Math.max(0, Math.min(alpha, 255));
+        paint.setAlpha(alpha);
+
         float centerX = getWidth() / 2f;
         float centerY = getHeight() / 2f;
-        // Aseguramos que el radio no exceda los límites (aunque no es crítico)
+
         float drawRadius = Math.min(radius, Math.min(centerX, centerY) - strokeWidth / 2);
         canvas.drawCircle(centerX, centerY, drawRadius, paint);
     }
+
 
     // Método para iniciar la animación
     public void startRippleAnimation(float maxRadius) {

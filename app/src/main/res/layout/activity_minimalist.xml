@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/minimalistContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/fondo_minimalista"
+    android:clickable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:padding="0dp">
+
+    <!-- Mensaje del vacío (aparece solo al final) -->
+    <TextView
+        android:id="@+id/tvVacuumMessage"
+        android:textColor="#EEEEEE"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0"
+        android:layout_gravity="center"/>
+
+</FrameLayout>

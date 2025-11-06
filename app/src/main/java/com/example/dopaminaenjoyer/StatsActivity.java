@@ -1,11 +1,10 @@
 package com.example.dopaminaenjoyer;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dopaminaenjoyer.manager.StatsManager;
-import java.util.concurrent.TimeUnit;
+
 
 public class StatsActivity extends AppCompatActivity {
     @Override

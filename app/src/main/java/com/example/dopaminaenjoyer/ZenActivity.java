@@ -1,28 +1,32 @@
 package com.example.dopaminaenjoyer;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.AnimationUtils;
-import android.view.animation.ScaleAnimation;
+import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.TextView;
-import android.animation.ValueAnimator;
-import android.view.animation.LinearInterpolator;
-
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.dopaminaenjoyer.manager.SoundManager;
+import com.example.dopaminaenjoyer.vista.ZenRingView;
+
 
 public class ZenActivity extends AppCompatActivity {
     private Button btnSalir;
     private TextView instructions;
     private View zenTouchArea;
+    private MediaPlayer ambientPlayer;
+
+    private SoundManager inhaleSound;
+    private SoundManager holdSound;
+    private SoundManager exhaleSound;
+
+
+
 
     private final Handler handler = new Handler();
     private Runnable inhaleTickRunnable;
@@ -44,41 +48,93 @@ public class ZenActivity extends AppCompatActivity {
 
         zenTouchArea = findViewById(R.id.zenTouchArea);
         instructions = findViewById(R.id.instructions);
+
         btnSalir = findViewById(R.id.btnSalirZen);
         btnSalir.setOnClickListener(v -> finish());
 
+        inhaleSound = new SoundManager(this, R.raw.inhale);
+        holdSound   = new SoundManager(this, R.raw.hold);
+        exhaleSound = new SoundManager(this, R.raw.exhale);
+
+        ambientPlayer = MediaPlayer.create(this, R.raw.zen_ambient);
+        ambientPlayer.setLooping(true);
+        ambientPlayer.setVolume(0.6f, 0.6f); // suave
+        ambientPlayer.start();
+
+
 
         zenTouchArea.setOnTouchListener((v, event) -> {
+
+            // Donde añadiremos el aro Zen (encima de todo)
+            ViewGroup root = (ViewGroup) getWindow().getDecorView();
+
             switch (event.getAction()) {
+
                 case MotionEvent.ACTION_DOWN:
-                    if (isExhaling) {
-                        // Si está exhalando, ignoramos toques hasta que termine
-                        return true;
-                    }
-                    // Usuario empieza a presionar: iniciar inhalación/retención guiada
+                    if (isExhaling) return true; // No permitir toque si está exhalando
+
                     isPressing = true;
-                    startInhaleSequence();
+                    startInhaleSequence(); // Empieza inhalación/retención normal
+
+                    // Crear aro Zen
+                    ZenRingView ring = new ZenRingView(ZenActivity.this);
+
+                    // Añadirlo ocupando toda la pantalla
+                    FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT
+                    );
+                    root.addView(ring, params);
+
+                    // Guardar referencia para moverlo y desaparecerlo luego
+                    zenTouchArea.setTag(ring);
+
+                    // Posicionar en el punto donde tocó el usuario
+                    ring.post(() -> ring.moveTo(event.getRawX(), event.getRawY()));
+
+                    // Comenzar pulso mientras mantenga el dedo presionado
+                    ring.startPulse();
                     return true;
+
+
+
+                case MotionEvent.ACTION_MOVE:
+                    // Hacer que el aro siga al dedo
+                    ZenRingView ringMove = (ZenRingView) zenTouchArea.getTag();
+                    if (ringMove != null) {
+                        ringMove.moveTo(event.getRawX(), event.getRawY());
+                    }
+                    return true;
+
+
 
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
-                    // Usuario levanta el dedo: iniciar exhalación (si no está ya)
                     if (isPressing) {
                         isPressing = false;
-                        // cancelar inhalación/retención si estaban en curso
+
                         cancelInhaleAndHoldRunnables();
-                        startExhaleSequence();
+                        startExhaleSequence(); // Aquí exhalas 8s como siempre
+
+                        // Expandir y desvanecer aro durante toda la exhalación
+                        ZenRingView ringEnd = (ZenRingView) zenTouchArea.getTag();
+                        if (ringEnd != null) {
+                            ringEnd.expandAndDisappear(exhaleSeconds * 1000L); // 👈 sincronizado a 8s
+                        }
                     }
                     return true;
             }
+
             return false;
         });
+
     }
     // ---------------------------------------------------
         private void startInhaleSequence () {
             inhaleSeconds = 4;
             holdSeconds = 7;
 
+            inhaleSound.play();
             // Mostrar inicio de inhalación con conteo
             instructions.setText("Inhala... " + inhaleSeconds + "s");
 
@@ -115,6 +171,8 @@ public class ZenActivity extends AppCompatActivity {
     }
     // ---------------------------------------------------
         private void startHoldCountdown () {
+
+            holdSound.play();
             holdTickRunnable = new Runnable() {
                 @Override
                 public void run() {
@@ -143,6 +201,7 @@ public class ZenActivity extends AppCompatActivity {
             if (isExhaling) return;
 
             isExhaling = true;
+            exhaleSound.play();
             exhaleSeconds = 8;
             instructions.setText("Exhala... " + exhaleSeconds + "s");
 
@@ -170,6 +229,11 @@ public class ZenActivity extends AppCompatActivity {
         protected void onDestroy() {
             super.onDestroy();
             handler.removeCallbacksAndMessages(null);
+            if (ambientPlayer != null) {
+                ambientPlayer.stop();
+                ambientPlayer.release();
+                ambientPlayer = null;
+            }
         }
     // ---------------------------------------------------
     @Override

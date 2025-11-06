@@ -11,6 +11,7 @@ import androidx.annotation.RawRes;
 public class SoundManager {
     private SoundPool soundPool;
     private int soundId;
+    private float currentVolume = 1f;
 
     public SoundManager(Context context, @RawRes int soundResId){
         initSoundPool(context,soundResId);
@@ -33,7 +34,7 @@ public class SoundManager {
     }
     public void play(){
         if (soundPool != null){
-            soundPool.play(soundId,1.0f,1.0f,0,0,1.0f);
+            soundPool.play(soundId, currentVolume, currentVolume, 1, 0, 1f);
         }
     }
     public void release() {
@@ -42,5 +43,9 @@ public class SoundManager {
             soundPool = null;
         }
     }
+    public void setVolume(float vol) {
+        currentVolume = vol;
+    }
+
 
 }

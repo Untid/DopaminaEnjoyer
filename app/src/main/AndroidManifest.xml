@@ -32,6 +32,11 @@
             android:name=".ZenActivity"
             android:parentActivityName=".MainActivity">
         </activity>
+
+        <activity
+            android:name=".MinimalistActivity"
+            android:parentActivityName=".MainActivity">
+        </activity>
     </application>
 
 </manifest>
