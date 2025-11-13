@@ -11,17 +11,27 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
+/**
+ * ZenRingView genera un aro visual para la actividad de respiración Zen.
+ * Funciona como un View personalizado que:
+ *  - Late mientras mantienes pulsado
+ *  - Sigue el dedo
+ *  - Se expande y desvanece al soltar (exhalación)
+ */
 public class ZenRingView extends View {
 
+    // ---------------------------------------------------------------
+    // Propiedades de dibujo
     private Paint paint;
     private float radius;
-    private float baseRadius = 120f;   // Tamaño base del aro en reposo (más grande)
-    private float pulseRange = 20f;    // Cuánto se expande al latir (más profundo)
+    private float baseRadius = 120f;   // Tamaño base del aro
+    private float pulseRange = 20f;    // amplitud del latido
 
-    private int currentAlpha = 230;    // Más visible (0-255)
+    private int currentAlpha = 230;    // visibilidad inicial (0-255)
     private ValueAnimator pulseAnimator;
 
-
+    //------------------------------------------------------------------
+    // Constructores
     public ZenRingView(Context context) {
         super(context);
         init();
@@ -36,11 +46,13 @@ public class ZenRingView extends View {
         radius = baseRadius;
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(100f); // ✅ ARO MÁS GORDO
+        paint.setStyle(Paint.Style.STROKE); // Dibuja solo el contorno
+        paint.setStrokeWidth(100f); // aro grueso
         paint.setColor(Color.WHITE); // Estética Zen fuerte
     }
 
+    // --------------------------------------------------------------
+    // Dibujar el aro
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -60,24 +72,26 @@ public class ZenRingView extends View {
     }
 
     // --------------------------------------------------------
-    // LATIDO mientras mantiene pulsado
+    // LATIDO: mientras el usuario mantiene pulsado
     public void startPulse() {
-        stopPulse(); // asegurarnos de no tener otro animador
+        stopPulse(); // cancelar cualquier animador existente
 
         // Animator que va de baseRadius -> baseRadius + pulseRange y vuelve (REVERSE)
         pulseAnimator = ValueAnimator.ofFloat(baseRadius, baseRadius + pulseRange);
-        pulseAnimator.setDuration(900);
+        pulseAnimator.setDuration(900); // duración de un ciclo
         pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
         pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
         pulseAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
 
         pulseAnimator.addUpdateListener(animation -> {
             radius = (float) animation.getAnimatedValue();
-            invalidate();
+            invalidate(); // redibuja el aro
         });
 
         pulseAnimator.start();
     }
+
+    // Detiene la animación
     public void stopPulse() {
         if (pulseAnimator != null) {
             pulseAnimator.cancel();
@@ -85,7 +99,7 @@ public class ZenRingView extends View {
         }
     }
     // --------------------------------------------------------
-    // EXPANSIÓN + DESVANECER durante EXHALACIÓN (8 s)
+    // EXPANSIÓN + DESVANECER: al soltar (exhalación)
     public void expandAndDisappear(long durationMs) {
         stopPulse(); // detenemos el pulso al soltar
 
@@ -114,7 +128,7 @@ public class ZenRingView extends View {
 
         set.addListener(new Animator.AnimatorListener() {
             @Override public void onAnimationEnd(Animator animation) {
-                // remover vista al terminar
+                // Elimitar la vista del layout al terminar la animación
                 ViewGroup parent = (ViewGroup) getParent();
                 if (parent != null) parent.removeView(ZenRingView.this);
             }
@@ -125,5 +139,4 @@ public class ZenRingView extends View {
 
         set.start();
     }
-
 }

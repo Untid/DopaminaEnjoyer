@@ -25,27 +25,37 @@ import com.example.dopaminaenjoyer.manager.StatsManager;
 
 import java.util.Random;
 
+/**
+ * Actividad principal de la aplicación "Dopamina Enjoyer"
+ * Gestiona el modo de clics, efectos visuales, sonidos, niveles y estadísticas.
+ */
 public class MainActivity extends AppCompatActivity {
-    private FrameLayout effectsContainer;
-    private FrameLayout dopamineLayout;
-    private View menuInicio;
-    //--------------------------------------------------
+
+    //--------------- Referencias a elementos de UI ---------------
+    private FrameLayout effectsContainer; // Contenedor donde se dibujan efectos (confeti, partículas, etc.)
+    private FrameLayout dopamineLayout; // Layout del modo "dopamina" (pantalla de clics)
+    private View menuInicio;    // Menú principal (inicio)
+    private ProgressBar clickProgress; // Barra de progreso del nivel
+    private TextView tvNivel; // Texto que muestra el nivel actual
+    private TextView tvLevelUpMessage; // Mensaje de subida de nivel
+    private TextView tvMotivationalMessage; // Mensaje motivacional aleatorio
+    private TextView tvExistentialCrisis; // Mensaje "crisis existencial (eventual)
+
+    //---------------- Managers princiaples -------------------------
     private SoundManager soundManager;
     private ConfettiManagerWrapper confettiManager;
     private NumberEffect numberEffect;
     private ParticleExplosion particleExplosion;
     private LevelManager levelManager;
     private StatsManager statsManager;
-    //--------------------------------------------------
-    private ProgressBar clickProgress;
-    private TextView tvNivel;
-    private TextView tvLevelUpMessage;
-    private TextView tvMotivationalMessage;
-    private TextView tvExistentialCrisis;
-    private boolean isCrisisActive = false;
-    private long sessionStartTime = 0;
-    private Handler handler = new Handler();
-    private Runnable decayRunnable;
+
+    // ----------- Control de estado y temporizadores --------------
+    private boolean isCrisisActive = false; // Evita mostrar crisis existenciales simultáneas
+    private long sessionStartTime = 0; // Tiempo de inicio de sesión de juego
+    private Handler handler = new Handler(); // Handler principal (para decay del progreso)
+    private Runnable decayRunnable; // Runnable que reduce el progreso tras inactividad
+
+    // ---------------- Handlers adiciones para ocultar textos -------------------
     private final Handler motivationalHandler = new Handler();
     private final Runnable hideMotivationalMessage = () -> tvMotivationalMessage.setVisibility(View.GONE);
     private final Handler existentialHandler = new Handler();
@@ -55,19 +65,22 @@ public class MainActivity extends AppCompatActivity {
     };
     private final Handler levelUpHandler = new Handler();
     private final Runnable hideLevelUpMessage = () -> tvLevelUpMessage.setVisibility(View.GONE);
-    private long lastMotivationTime = 0;
-    private static final long MOTIVATION_COOLDOWN_MS = 3000; // 1.5s de cooldown
 
-    //--------------------------------------------------
-    private static final int CLICKS_POR_NIVEL = 25;
-    private static final long DECAY_DELAY_MS = 2000;
+    // -------------- Control de cooldown para mensajes motivacionales -----------------
+    private long lastMotivationTime = 0;
+    private static final long MOTIVATION_COOLDOWN_MS = 3000; // 3s entre mensajes motivacionales
+
+    //------------------- Configuración general -------------------------------
+    private static final int CLICKS_POR_NIVEL = 25; // Clicks necesarios para subir nivel
+    private static final long DECAY_DELAY_MS = 2000; // Tiempo sin clics antes de empezar a decaer
     //--------------------------------------------------
 
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // ------------- Vincular elementos de UI ----------------------
         effectsContainer = findViewById(R.id.effectsContainer);
         dopamineLayout = findViewById(R.id.dopamineLayout);
         menuInicio = findViewById(R.id.menuInicio);
@@ -76,21 +89,24 @@ public class MainActivity extends AppCompatActivity {
         tvLevelUpMessage = findViewById(R.id.tvLevelUpMessage);
         tvMotivationalMessage = findViewById(R.id.tvMotivationalMessage);
         tvExistentialCrisis = findViewById(R.id.tvExistentialCrisis);
-        //--------------------------------------------------
+
+        //----------- Botón para salir del modo dopamina -------------------
         ImageButton btnMenu = findViewById(R.id.btnMenu);
         btnMenu.setOnClickListener(v -> salirModoDopamina());
 
-        // Inicializar LevelManager y StatsManager
+        // -------- Inicialización de gestores de nivel y estadísticas --------
         levelManager = new LevelManager(clickProgress, tvNivel, CLICKS_POR_NIVEL);
         statsManager = new StatsManager(this);
         clickProgress.setVisibility(View.GONE);
-        //--------------------------------------------------
-        // Inicializar managers y efectos
+
+        // ---------- Inicialización de efectos y sonido ---------------------
         soundManager = new SoundManager(this, R.raw.blurp);
         confettiManager = new ConfettiManagerWrapper(effectsContainer);
         numberEffect = new NumberEffect(effectsContainer);
         particleExplosion = new ParticleExplosion(effectsContainer);
 
+
+        // ------------------- Botones de menú principal ---------------------------
         findViewById(R.id.btnEmpezar).setOnClickListener(v -> mostrarModoDopamina());
         findViewById(R.id.btnSalir).setOnClickListener(v -> finish());
         findViewById(R.id.btnMinimalista).setOnClickListener(v -> {
@@ -105,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //--------------------------------------------------
+    // ----------- Activa el modo de clics (pantalla principal del clicker) ----------
     @SuppressLint("ClickableViewAccessibility")
     private void mostrarModoDopamina() {
         menuInicio.setVisibility(View.GONE);
@@ -114,17 +130,18 @@ public class MainActivity extends AppCompatActivity {
         tvLevelUpMessage.setVisibility(View.GONE);
         tvExistentialCrisis.setVisibility(View.GONE);
 
+        // Cargar progreso guardado del jugador
         int[] saved = statsManager.loadCurrentProgress();
         levelManager.loadProgress(saved[0], saved[1]);
-
         sessionStartTime = System.currentTimeMillis();
 
+        // Listener táctil: cada toque cuenta como un click
         dopamineLayout.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 float touchX = event.getX();
                 float touchY = event.getY();
 
-                // Reiniciar decadencia
+                // Reiniciar el "decay" (bajada progresiva del nivel por inactividad)
                 handler.removeCallbacks(decayRunnable);
                 decayRunnable = new Runnable() {
                     @Override
@@ -142,14 +159,14 @@ public class MainActivity extends AppCompatActivity {
                 };
                 handler.postDelayed(decayRunnable, DECAY_DELAY_MS);
 
-                // Guardar nivel anterior
+                // Guardar nivel previo (para detectar subidas)
                 int nivelAnterior = levelManager.getCurrentLevel();
 
-                // ✅ SOLO UNA VEZ: incrementar progreso y clics
+                // Incrementar progreso y clics totales
                 levelManager.incrementProgress();
                 statsManager.addClicks(1);
 
-                // 🌟 Verificar CRISIS EXISTENCIAL (usando el total actualizado)
+                // Mostrar "crisis existencial" en intervalos concretos
                 int totalClicks = levelManager.getTotalClicks();
                 if (totalClicks >= MotivationalMessageEffect.EXISTENTIAL_CRISIS_INTERVAL &&
                         totalClicks % MotivationalMessageEffect.EXISTENTIAL_CRISIS_INTERVAL == 0 &&
@@ -159,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
 
                 long now = System.currentTimeMillis();
 
-                // ✅ Solo mostrar mensaje si pasó el cooldown
+                // Mostrar mensaje motivacional solo si ha pasado el cooldown
                 if (now - lastMotivationTime >= MOTIVATION_COOLDOWN_MS) {
                     String motivationalMsg = MotivationalMessageEffect.getMotivationalMessage(totalClicks);
                     if (motivationalMsg != null) {
@@ -174,14 +191,14 @@ public class MainActivity extends AppCompatActivity {
                 }
 
 
-                // Verificar subida de nivel
+                // Si sube de nivel, mostrar mensaje y efectos
                 if (levelManager.getCurrentLevel() > nivelAnterior) {
                     showLevelUpMessage(levelManager.getCurrentLevel());
                     statsManager.updateMaxLevel(levelManager.getCurrentLevel());
                     triggerLevelUpEffect(touchX, touchY);
                 }
 
-                // Efectos visuales
+                // Efectos visuales y sonoros
                 numberEffect.showBigYellowNumber(touchX, touchY);
                 createRippleEffect(touchX, touchY);
                 triggerDopamineEffect(touchX, touchY);
@@ -192,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //--------------------------------------------------
+    // ------------------Muestra cita "existencial" temporal--------------------
     private void triggerExistentialCrisis() {
         isCrisisActive = true;
         String quote = MotivationalMessageEffect.getRandomExistentialQuote();
@@ -204,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
         existentialHandler.postDelayed(hideExistentialCrisis, 3500);
     }
 
-    //--------------------------------------------------
+    //----------------- Muestra texto de subida de nivel ------------------------
     private void showLevelUpMessage(int newLevel) {
         levelUpHandler.removeCallbacks(hideLevelUpMessage);
         tvLevelUpMessage.setText(MotivationalMessageEffect.getLevelUpMessage(newLevel));
@@ -212,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
         levelUpHandler.postDelayed(hideLevelUpMessage, 2000);
     }
 
-    //--------------------------------------------------
+    // ------------ Efectos visuales al hacer click (partículas o confeti aleatorio) --------------
     private void triggerDopamineEffect(float x, float y) {
         int numExplosions = 3 + new Random().nextInt(3);
         for (int i = 0; i < numExplosions; i++) {
@@ -229,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //--------------------------------------------------
+    // ----------- Efecto especial de subida de nivel (más partículas + confeti) ------------------
     private void triggerLevelUpEffect(float x, float y) {
         int numExplosions = 8 + new Random().nextInt(5);
         for (int i = 0; i < numExplosions; i++) {
@@ -242,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
         confettiManager.triggerRainingAndExplosion();
     }
 
-    //--------------------------------------------------
+    // --------- Crea un efecto de onda expansiva en la posición del toque ------------------
     private void createRippleEffect(float x, float y) {
         effectsContainer.post(() -> {
             if (effectsContainer.getWidth() <= 0 || effectsContainer.getHeight() <= 0) return;
@@ -262,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //-------------------------------------------------------
+    // -------------- Cambia el color de los efectos según el nivel actual --------------------
     private int getColorByLevel(int level) {
         if (level < 5) return Color.YELLOW;
         else if (level < 10) return Color.CYAN;
@@ -273,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
         else return Color.rgb(255, 215, 0); // Dorado
     }
 
-    //-------------------------------------------------------
+    // -------------- Sale del modo dopamina y guarda progreso y estadísticas --------------
     private void salirModoDopamina() {
         if (sessionStartTime > 0) {
             long elapsedMs = System.currentTimeMillis() - sessionStartTime;
@@ -292,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
         menuInicio.setVisibility(View.VISIBLE);
     }
 
-    //-------------------------------------------------------
+    // --------- Limpieza de Handlers y recursos al destruir la actividad ---------------
     @Override
     protected void onDestroy() {
         super.onDestroy();
